@@ -1,0 +1,28 @@
+ steps:
+ # Build the container image
+ - name: 'gcr.io/cloud-builders/docker'
+ # On `--build-arg` argument, set the value which were you defined on subtitution variable.
+ # Learn more about subtitution variable, here https://cloud.google.com/build/docs/configuring-builds/substitute-variable-values?_ga=2.139823795.-1806697787.1669348039
+ # In this example we set the build argument to receive the value from substitution varible
+ # named `_VUE_APP_API_HOST`. Make sure, you've added this substitution varible on cloud build settings.
+ # Make sure you also set the Dockerfile to be received argument when build the image.
+   args: ['build', '-t', 'asia.gcr.io/$PROJECT_ID/image_name:$COMMIT_SHA', '.', '--build-arg', 'NAME_OF_ARGUMENT_KEY=${_VUE_APP_API_HOST}']
+ # Push the container image to Container Registry
+ - name: 'gcr.io/cloud-builders/docker'
+   args: ['push', 'asia.gcr.io/$PROJECT_ID/image_name:$COMMIT_SHA']
+ # Deploy container image to Cloud Run
+ - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+   entrypoint: gcloud
+   args:
+   - 'run'
+   - 'deploy'
+   # Set the name of cloud run service
+   - 'example-cloud-run-service-name'
+   - '--image'
+   # Set the docker image which we'll be used (above image)
+   - 'asia.gcr.io/$PROJECT_ID/image_name:$COMMIT_SHA'
+   - '--region'
+   # Set the region for deployed the service
+   - 'asia-southeast2'
+ images:
+ - 'asia.gcr.io/$PROJECT_ID/image_name:$COMMIT_SHA'
